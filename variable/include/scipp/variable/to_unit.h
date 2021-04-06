@@ -9,6 +9,9 @@
 
 namespace scipp::variable {
 
+[[nodiscard]] SCIPP_VARIABLE_EXPORT double
+conversion_scale(const units::Unit &a, const units::Unit &b,
+                 const core::DType &dtype);
 [[nodiscard]] SCIPP_VARIABLE_EXPORT Variable
 to_unit(const VariableConstView &var, const units::Unit &unit);
 
