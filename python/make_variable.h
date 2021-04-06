@@ -5,6 +5,7 @@
 #pragma once
 
 #include "scipp/core/dtype.h"
+#include "scipp/core/element/to_unit.h"
 #include "scipp/units/unit.h"
 
 #include "unit.h"
@@ -145,20 +146,36 @@ Variable doMakeVariable(const std::vector<Dim> &labels, py::array &values,
     if (variances.has_value()) {
       throw except::VariancesError("datetimes cannot have variances.");
     }
-    const auto [actual_unit, value_factor] = get_time_unit(values, dtype, unit);
+    const auto [actual_unit, scale] = get_time_unit(values, dtype, unit);
 
-    if (value_factor != 1) {
-      throw std::invalid_argument(
-          "Scaling datetimes is not supported. The units of the datetime64 "
-          "objects must match the unit of the Variables.");
-    }
+    // A bit dirty, assigning the actual (= target) unit with values for the
+    // unit of the input array and then doing a custom in-place conversion to
+    // get the correct values.
     unit = actual_unit;
+    auto var =
+        core::CallDType<double, float, int64_t, int32_t, bool,
+                        scipp::core::time_point>::apply<MakeVariable>(dtypeTag,
+                                                                      labels,
+                                                                      values,
+                                                                      variances,
+                                                                      unit);
+    if (scale != 1.0) {
+      transform_in_place(
+          var, var, scale * unit,
+          overloaded{
+              core::element::arg_list<
+                  std::tuple<core::time_point, core::time_point, double>>,
+              [](auto &out, const auto &in, const auto &s) {
+                out = core::element::to_unit(in, s);
+              }});
+    }
+    return var;
+  } else {
+    return core::CallDType<
+        double, float, int64_t, int32_t, bool,
+        scipp::core::time_point>::apply<MakeVariable>(dtypeTag, labels, values,
+                                                      variances, unit);
   }
-
-  return core::CallDType<
-      double, float, int64_t, int32_t, bool,
-      scipp::core::time_point>::apply<MakeVariable>(dtypeTag, labels, values,
-                                                    variances, unit);
 }
 
 Variable makeVariableDefaultInit(const std::vector<Dim> &labels,
@@ -175,7 +192,7 @@ Variable makeVariableDefaultInit(const std::vector<Dim> &labels,
                       dtype.is_none() ? std::optional<units::Unit>{}
                                       : parse_datetime_dtype(dtype),
                       unit);
-    if (value_factor != 1) {
+    if (value_factor != 1.0) {
       throw std::invalid_argument(
           "Scaling datetimes is not supported. The units of the datetime64 "
           "objects must match the unit of the Variables.");
