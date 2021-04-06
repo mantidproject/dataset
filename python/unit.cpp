@@ -4,6 +4,7 @@
 #include "unit.h"
 
 #include "scipp/units/string.h"
+#include "scipp/variable/to_unit.h"
 
 #include "dtype.h"
 
@@ -16,7 +17,7 @@ bool temporal_or_dimensionless(const units::Unit unit) {
 }
 } // namespace
 
-std::tuple<units::Unit, int64_t>
+std::tuple<units::Unit, double>
 get_time_unit(const std::optional<scipp::units::Unit> value_unit,
               const std::optional<scipp::units::Unit> dtype_unit,
               const units::Unit sc_unit) {
@@ -39,17 +40,20 @@ get_time_unit(const std::optional<scipp::units::Unit> value_unit,
   else if (value_unit.has_value())
     actual_unit = *value_unit;
 
-  // TODO implement
   if (value_unit && value_unit != actual_unit) {
-    throw std::runtime_error("Conversion of time units is not implemented.");
+    const auto scale = variable::conversion_scale(*value_unit, actual_unit,
+                                                  dtype<core::time_point>);
+    std::cout << to_string(*value_unit) << "  " << to_string(actual_unit)
+              << std::endl;
+    std::cout << scale << std::endl;
+    return {actual_unit, scale};
   }
-
-  return {actual_unit, 1};
+  return {actual_unit, 1.0};
 }
 
-std::tuple<units::Unit, int64_t> get_time_unit(const py::buffer &value,
-                                               const py::object &dtype,
-                                               const units::Unit unit) {
+std::tuple<units::Unit, double> get_time_unit(const py::buffer &value,
+                                              const py::object &dtype,
+                                              const units::Unit unit) {
   return get_time_unit(
       value.is_none() || value.attr("dtype").attr("kind").cast<char>() != 'M'
           ? std::optional<units::Unit>{}
