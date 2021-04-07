@@ -43,9 +43,6 @@ get_time_unit(const std::optional<scipp::units::Unit> value_unit,
   if (value_unit && value_unit != actual_unit) {
     const auto scale = variable::conversion_scale(*value_unit, actual_unit,
                                                   dtype<core::time_point>);
-    std::cout << to_string(*value_unit) << "  " << to_string(actual_unit)
-              << std::endl;
-    std::cout << scale << std::endl;
     return {actual_unit, scale};
   }
   return {actual_unit, 1.0};
