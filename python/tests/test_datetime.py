@@ -15,8 +15,10 @@ import scipp as sc
 _UNIT_STRINGS = ('s', 'ms', 'us', 'ns', 'D', 'M', 'Y')
 
 
-def _mismatch_pairs(units):
-    yield from filter(lambda t: t[0] != t[1], itertools.product(units, units))
+def _mismatch_pairs(units, *excluded):
+    yield from filter(
+        lambda t: t[0] not in excluded and t[1] not in excluded,
+        filter(lambda t: t[0] != t[1], itertools.product(units, units)))
 
 
 def _make_arrays(units, num_arrays, minsize=1):
@@ -71,15 +73,17 @@ def test_construct_0d_datetime_from_int(unit):
     assert var.value == np.datetime64(value, unit)
 
 
-@pytest.mark.parametrize("unit1,unit2", _mismatch_pairs(_UNIT_STRINGS))
-def test_construct_0d_datetime_mismatch(unit1, unit2):
+@pytest.mark.parametrize("unit1,unit2",
+                         _mismatch_pairs(_UNIT_STRINGS, 'M', 'Y'))
+def test_construct_0d_datetime_conversion(unit1, unit2):
     with pytest.raises(ValueError):
+        # those two units must match
         sc.Variable(unit=unit1, dtype=f'datetime64[{unit2}]')
-    with pytest.raises(RuntimeError):
-        sc.Variable(value=np.datetime64('now', unit1),
-                    dtype=f'datetime64[{unit2}]')
-    with pytest.raises(RuntimeError):
-        sc.Variable(value=np.datetime64('now', unit1), unit=unit2)
+
+    # in this case, passing different units acts as to_unit
+    var1 = sc.Variable(value=np.datetime64(27508762, unit1))
+    var2 = sc.Variable(value=np.datetime64(27508762, unit1), unit=unit2)
+    assert sc.equal(sc.to_unit(var1, unit2), var2).value
 
 
 def test_construct_0d_datetime_nounit():
@@ -111,12 +115,17 @@ def test_0d_datetime_setter(unit):
     assert sc.identical(
         var, sc.Variable(value=np.datetime64(int_replacement, unit)))
 
+
 @pytest.mark.parametrize("unit1,unit2", _mismatch_pairs(_UNIT_STRINGS))
-def test_0d_datetime_setter_mismatch(unit1, unit2):
+def test_0d_datetime_setter_unit_conversion(unit1, unit2):
     initial, replacement = _make_datetimes((unit1, unit2), 2)
-    var1 = sc.Variable(value=initial)
-    with pytest.raises(ValueError):
-        var1.value = replacement
+    var = sc.Variable(value=initial)
+    if unit1 in ('M', 'Y') or unit2 in ('M', 'Y'):
+        with pytest.raises(sc.UnitError):
+            var.value = replacement
+    else:
+        var.value = replacement
+        assert sc.identical(var, sc.Variable(value=replacement, unit=unit1))
 
 
 @pytest.mark.parametrize("unit", _UNIT_STRINGS)
@@ -158,15 +167,18 @@ def test_construct_datetime_from_int(unit):
     np.testing.assert_array_equal(var.values, values.astype(dtype_str))
 
 
-@pytest.mark.parametrize("unit1,unit2", _mismatch_pairs(_UNIT_STRINGS))
-def test_construct_datetime_mismatch(unit1, unit2):
-    values = _make_arrays(unit1, 1)
+@pytest.mark.parametrize("unit1,unit2",
+                         _mismatch_pairs(_UNIT_STRINGS, 'M', 'Y'))
+def test_construct_datetime_conversion(unit1, unit2):
     with pytest.raises(ValueError):
+        # those two units must match
         sc.Variable(dims=['x'], unit=unit1, dtype=f'datetime64[{unit2}]')
-    with pytest.raises(RuntimeError):
-        sc.Variable(dims=['x'], values=values, dtype=f'datetime64[{unit2}]')
-    with pytest.raises(RuntimeError):
-        sc.Variable(dims=['x'], values=values, unit=unit2)
+
+    # in this case, passing different units acts as to_unit
+    values = _make_arrays(unit1, 1)
+    var1 = sc.Variable(dims=['x'], values=values)
+    var2 = sc.Variable(dims=['x'], values=values, unit=unit2)
+    assert sc.identical(sc.to_unit(var1, unit2), var2)
 
 
 def test_construct_datetime_nounit():
@@ -198,9 +210,9 @@ def test_datetime_setter(unit):
 @pytest.mark.parametrize("unit1,unit2", _mismatch_pairs(_UNIT_STRINGS))
 def test_datetime_setter_mismatch(unit1, unit2):
     initial, replacement = _make_arrays((unit1, unit2), 2)
-    var1 = sc.Variable(dims=['x'], values=initial)
-    with pytest.raises(ValueError):
-        var1.values = replacement
+    var = sc.Variable(dims=['x'], values=initial)
+    with pytest.raises(sc.UnitError):
+        var.values = replacement
 
 
 @pytest.mark.parametrize("unit", _UNIT_STRINGS)
