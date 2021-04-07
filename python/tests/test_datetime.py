@@ -106,6 +106,10 @@ def test_0d_datetime_setter(unit):
     var.value = replacement
     assert sc.identical(var, sc.Variable(value=replacement))
 
+    int_replacement = 981641
+    var.value = int_replacement
+    assert sc.identical(
+        var, sc.Variable(value=np.datetime64(int_replacement, unit)))
 
 @pytest.mark.parametrize("unit1,unit2", _mismatch_pairs(_UNIT_STRINGS))
 def test_0d_datetime_setter_mismatch(unit1, unit2):

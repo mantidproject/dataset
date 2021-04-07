@@ -286,13 +286,17 @@ private:
       if constexpr (std::is_same_v<T, scipp::python::PyObject>)
         data[0] = rhs;
       else if constexpr (std::is_same_v<T, scipp::core::time_point>) {
-        // TODO support int
-        if (view.unit() != parse_datetime_dtype(rhs)) {
-          // TODO implement
-          throw std::invalid_argument(
-              "Conversion of time units is not implemented.");
+        if (py::isinstance(rhs, py::int_{}.get_type())) {
+          data[0] = core::time_point{rhs.cast<int64_t>()};
+        } else {
+          // Assume it is a datetime, if not, parse_datetime_dtype will throw.
+          if (view.unit() != parse_datetime_dtype(rhs)) {
+            // TODO implement
+            throw std::invalid_argument(
+                "Conversion of time units is not implemented.");
+          }
+          data[0] = make_time_point(rhs.template cast<py::buffer>());
         }
-        data[0] = make_time_point(rhs.template cast<py::buffer>());
       } else
         data[0] = rhs.cast<T>();
     }
