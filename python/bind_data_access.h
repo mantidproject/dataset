@@ -7,6 +7,7 @@
 #include <variant>
 
 #include "scipp/core/dtype.h"
+#include "scipp/core/element/to_unit.h"
 #include "scipp/core/tag_util.h"
 #include "scipp/dataset/dataset.h"
 #include "scipp/dataset/except.h"
@@ -150,12 +151,22 @@ template <class... Ts> class as_ElementArrayViewImpl {
   }
 
   template <class View>
-  static void set(const Dimensions &dims, const View &view,
-                  const py::object &obj) {
+  static void set(const Dimensions &dims, const units::Unit unit,
+                  const View &view, const py::object &obj) {
     std::visit(
-        [&dims, &obj](const auto &view_) {
+        [&dims, &unit, &obj](const auto &view_) {
           using T =
               typename std::remove_reference_t<decltype(view_)>::value_type;
+          if constexpr (std::is_same_v<T, core::time_point>) {
+            if (const auto rhs_unit = parse_datetime_dtype(obj);
+                rhs_unit != unit) {
+              throw except::UnitError(
+                  "Cannot convert datetime units in assignment. Attempted to "
+                  "assign an object with unit `" +
+                  to_string(rhs_unit) + "` to a slice with unit `" +
+                  to_string(unit) + "`.");
+            }
+          }
           copy_array_into_view(cast_to_array_like<T>(obj), view_, dims);
         },
         view);
@@ -237,7 +248,7 @@ public:
 
   template <class Var>
   static void set_values(Var &view, const py::object &obj) {
-    set(view.dims(), get<get_values>(view), obj);
+    set(view.dims(), view.unit(), get<get_values>(view), obj);
   }
 
   template <class Var>
@@ -246,7 +257,7 @@ public:
       return remove_variances(view);
     if (!view.hasVariances())
       init_variances(view);
-    set(view.dims(), get<get_variances>(view), obj);
+    set(view.dims(), view.unit(), get<get_variances>(view), obj);
   }
 
 private:
