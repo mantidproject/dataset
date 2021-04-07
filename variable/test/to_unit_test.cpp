@@ -72,6 +72,19 @@ TEST(ToUnitTest, time_point) {
                        core::time_point{40000 + 60000}}));
 }
 
+TEST(ToUnitTest, time_point_days) {
+  // Days are treated as solar days, i.e. are always 24h long.
+  for (auto days_val : {911l, 3164l, 12477l, 12478l}) {
+    const int64_t seconds_val = days_val * (24 * 60 * 60);
+    const auto seconds_var = makeVariable<core::time_point>(
+        Dims{Dim::X}, Values{core::time_point{seconds_val}}, units::s);
+    const auto days_var = makeVariable<core::time_point>(
+        Dims{Dim::X}, Values{core::time_point{days_val}}, units::Unit("D"));
+    EXPECT_EQ(to_unit(seconds_var, units::Unit("D")), days_var);
+    EXPECT_EQ(to_unit(days_var, units::s), seconds_var);
+  }
+}
+
 TEST(ToUnitTest, time_point_bad_units) {
   const auto do_to_unit = [](const char *initial, const char *final) {
     return to_unit(makeVariable<core::time_point>(Dims{}, units::Unit(initial)),
