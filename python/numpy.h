@@ -41,8 +41,7 @@ void copy_element(const Source &src, Destination &&dst) {
 
 /// Cast a py::object referring to an array to py::array_t<auto> if supported.
 /// Otherwise, copies the contents into a std::vector<auto>.
-template <class T>
-auto cast_to_array_like(const py::object &obj, const units::Unit unit) {
+template <class T> auto cast_to_array_like(const py::object &obj) {
   using TM = ElementTypeMap<T>;
   using PyType = typename TM::PyType;
   if constexpr (std::is_same_v<T, core::time_point>) {

@@ -19,7 +19,7 @@ template <class T> struct MakeVariable {
   static Variable apply(const std::vector<Dim> &labels, py::array values,
                         const std::optional<py::array> &variances,
                         const units::Unit unit) {
-    const auto valuesT = cast_to_array_like<T>(values, unit);
+    const auto valuesT = cast_to_array_like<T>(values);
     py::buffer_info info = valuesT.request();
     Dimensions dims(labels, {info.shape.begin(), info.shape.end()});
     auto var = variances
@@ -33,7 +33,7 @@ template <class T> struct MakeVariable {
     var.setUnit(unit);
     copy_array_into_view(valuesT, var.template values<T>(), dims);
     if (variances) {
-      copy_array_into_view(cast_to_array_like<T>(*variances, unit),
+      copy_array_into_view(cast_to_array_like<T>(*variances),
                            var.template variances<T>(), dims);
     }
     return var;

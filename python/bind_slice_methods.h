@@ -53,7 +53,7 @@ template <class View> struct SetData {
                                  "values use the `values` property or provide "
                                  "a tuple of values and variances.");
 
-      copy_array_into_view(cast_to_array_like<T>(obj, slice.unit()),
+      copy_array_into_view(cast_to_array_like<T>(obj),
                            slice.template values<T>(), slice.dims());
     }
   };
