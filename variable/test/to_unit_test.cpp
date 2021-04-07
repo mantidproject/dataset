@@ -78,10 +78,10 @@ TEST(ToUnitTest, time_point_bad_units) {
                    units::Unit(final));
   };
 
-  // Conversions to or from time points with unit day or larger are complicated
-  // and not implemented.
-  const auto small_unit_names = {"h", "min", "s", "ns"};
-  const auto large_unit_names = {"Y", "M", "D"};
+  // Conversions to or from time points with unit larger than day are
+  // complicated and not implemented.
+  const auto small_unit_names = {"D", "h", "min", "s", "ns"};
+  const auto large_unit_names = {"Y", "M"};
   for (const char *initial : small_unit_names) {
     for (const char *final : small_unit_names) {
       EXPECT_NO_THROW_DISCARD(do_to_unit(initial, final));

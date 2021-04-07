@@ -24,10 +24,10 @@ conversion_scale(const units::Unit &a, const units::Unit &b,
     throw except::UnitError("Conversion from `" + to_string(a) + "` to `" +
                             to_string(b) + "` is not valid.");
   if (dtype == core::dtype<core::time_point> &&
-      (a.underlying().multiplier() >= days_multiplier ||
-       b.underlying().multiplier() >= days_multiplier)) {
+      (a.underlying().multiplier() > days_multiplier ||
+       b.underlying().multiplier() > days_multiplier)) {
     throw except::UnitError(
-        "Unit conversion for datetimes with a unit of days or greater"
+        "Unit conversion for datetimes with a unit greater than days"
         " is not implemented. Attempted conversion from `" +
         to_string(a) + "` to `" + to_string(b) + "`.");
   }
