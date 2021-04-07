@@ -10,6 +10,7 @@
 #include "scipp/core/tag_util.h"
 #include "scipp/dataset/dataset.h"
 #include "scipp/dataset/except.h"
+#include "scipp/variable/to_unit.h"
 #include "scipp/variable/variable.h"
 
 #include "dtype.h"
@@ -290,12 +291,14 @@ private:
           data[0] = core::time_point{rhs.cast<int64_t>()};
         } else {
           // Assume it is a datetime, if not, parse_datetime_dtype will throw.
-          if (view.unit() != parse_datetime_dtype(rhs)) {
-            // TODO implement
-            throw std::invalid_argument(
-                "Conversion of time units is not implemented.");
+          double scale = 1.0;
+          if (const auto rhs_unit = parse_datetime_dtype(rhs);
+              view.unit() != rhs_unit) {
+            // The unit of the view takes precedence.
+            scale = variable::conversion_scale(rhs_unit, view.unit(),
+                                               dtype<core::time_point>);
           }
-          data[0] = make_time_point(rhs.template cast<py::buffer>());
+          data[0] = make_time_point(rhs.template cast<py::buffer>(), scale);
         }
       } else
         data[0] = rhs.cast<T>();
