@@ -5,8 +5,9 @@
 #include "scipp/core/multi_index.h"
 #include "scipp/core/except.h"
 
-namespace scipp::core::detail {
+namespace scipp::core {
 
+namespace detail {
 void validate_bin_indices_impl(const ElementArrayViewParams &param0,
                                const ElementArrayViewParams &param1) {
   const auto iterDims = param0.dims();
@@ -27,5 +28,11 @@ void validate_bin_indices_impl(const ElementArrayViewParams &param0,
     index.increment();
   }
 }
+} // namespace detail
 
-} // namespace scipp::core::detail
+template class MultiIndex<scipp::index{1}>;
+template class MultiIndex<scipp::index{2}>;
+template class MultiIndex<scipp::index{3}>;
+template class MultiIndex<scipp::index{4}>;
+
+} // namespace scipp::core

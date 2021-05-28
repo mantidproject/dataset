@@ -53,7 +53,11 @@ constexpr auto get_buffer_size(const scipp::index ndim) noexcept {
 }
 } // namespace detail
 
-template <scipp::index N> class MultiIndex {
+template <scipp::index N> class SCIPP_CORE_EXPORT MultiIndex {
+  static_assert(
+      N > 0 && N < 5,
+      "Explicit instantiations are only provided for up to 4 operands");
+
 public:
   /// Construct without bins.
   template <class... StridesArgs>
@@ -483,5 +487,10 @@ MultiIndex(const Dimensions &, const StridesArgs &...)
 template <class... Params>
 MultiIndex(const ElementArrayViewParams &, const Params &...)
     -> MultiIndex<sizeof...(Params) + 1>;
+
+extern template class MultiIndex<scipp::index{1}>;
+extern template class MultiIndex<scipp::index{2}>;
+extern template class MultiIndex<scipp::index{3}>;
+extern template class MultiIndex<scipp::index{4}>;
 
 } // namespace scipp::core
