@@ -10,6 +10,7 @@
 #include "scipp/variable/operations.h"
 #include "scipp/variable/slice.h"
 #include "scipp/variable/sort.h"
+#include "scipp/variable/transform.h"
 #include "scipp/variable/util.h"
 
 using namespace scipp;
@@ -73,6 +74,56 @@ template <typename T> void bind_sort_variable(py::module &m) {
       py::call_guard<py::gil_scoped_release>());
 }
 
+void bind_experimental(py::module &m) {
+  m.def("experimental_transform",
+        [](py::object const &kernel, const Variable &a) {
+          auto fptr_address = kernel.attr("address").cast<intptr_t>();
+          auto fptr = reinterpret_cast<double (*)(double)>(fptr_address);
+          return variable::transform<double>(
+              a, overloaded{core::transform_flags::expect_no_variance_arg<0>,
+                            [&kernel](const units::Unit &u) {
+                              py::gil_scoped_acquire acquire;
+                              return py::cast<units::Unit>(kernel(u));
+                            },
+                            [fptr](const auto &x) { return fptr(x); }});
+        });
+
+  m.def("experimental_transform", [](py::object const &kernel,
+                                     const Variable &a, const Variable &b) {
+    auto fptr_address = kernel.attr("address").cast<intptr_t>();
+    auto fptr = reinterpret_cast<double (*)(double, double)>(fptr_address);
+    return variable::transform<double>(
+        a, b,
+        overloaded{
+            core::transform_flags::expect_no_variance_arg<0>,
+            core::transform_flags::expect_no_variance_arg<1>,
+            [&kernel](const units::Unit &x, const units::Unit &y) {
+              py::gil_scoped_acquire acquire;
+              return py::cast<units::Unit>(kernel(x, y));
+            },
+            [fptr](const auto &x, const auto &y) { return fptr(x, y); }});
+  });
+
+  m.def("experimental_transform", [](py::object const &kernel,
+                                     const Variable &a, const Variable &b,
+                                     const Variable &c) {
+    auto fptr_address = kernel.attr("address").cast<intptr_t>();
+    auto fptr =
+        reinterpret_cast<double (*)(double, double, double)>(fptr_address);
+    return variable::transform<double>(
+        a, b, c,
+        overloaded{core::transform_flags::expect_no_variance_arg<0>,
+                   core::transform_flags::expect_no_variance_arg<1>,
+                   core::transform_flags::expect_no_variance_arg<2>,
+                   [&kernel](const units::Unit &x, const units::Unit &y,
+                             const units::Unit &z) {
+                     py::gil_scoped_acquire acquire;
+                     return py::cast<units::Unit>(kernel(x, y, z));
+                   },
+                   [fptr](const auto &... args) { return fptr(args...); }});
+  });
+}
+
 void init_operations(py::module &m) {
   bind_dot<Variable>(m);
 
@@ -92,4 +143,6 @@ void init_operations(py::module &m) {
     // Do NOT release GIL since using py::slice
     return std::tuple{dim.name(), py::slice(start, stop, 1)};
   });
+
+  bind_experimental(m);
 }
