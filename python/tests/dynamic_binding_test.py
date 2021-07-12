@@ -51,8 +51,8 @@ def test_bound_methods_shape():
     assert sc.identical(var.transpose(['y', 'x']),
                         sc.transpose(var, ['y', 'x']))
     for obj in (var, da):
-        assert sc.identical(obj.flatten(dims=['x', 'y'], to='z'),
-                            sc.flatten(obj, dims=['x', 'y'], to='z'))
+        assert sc.identical(obj.flatten(dims=['x', 'y'], dim='z'),
+                            sc.flatten(obj, dims=['x', 'y'], dim='z'))
         assert sc.identical(obj.fold(dim='x', sizes={
             'a': 2,
             'b': 2

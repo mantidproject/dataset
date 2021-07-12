@@ -131,7 +131,7 @@ def find_log_limits(x):
     """
     from .. import flatten, ones
     volume = np.product(x.shape)
-    pixel = flatten(sc.values(x), to='pixel')
+    pixel = flatten(sc.values(x), dim='pixel')
     weights = ones(dims=['pixel'], shape=[volume])
     hist = sc.histogram(sc.DataArray(data=weights, coords={'order': pixel}),
                         bins=sc.Variable(dims=['order'],

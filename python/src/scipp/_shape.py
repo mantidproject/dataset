@@ -82,6 +82,7 @@ def concatenate(x: VariableLike, y: VariableLike, dim: str) -> VariableLike:
 
 
 def fold(x: VariableLike,
+         *,
          dim: str,
          sizes: Optional[Dict[str, int]] = None,
          dims: Optional[Union[List[str], Tuple[str]]] = None,
@@ -140,16 +141,19 @@ def fold(x: VariableLike,
         return _call_cpp_func(_cpp.fold, x, dim, dict(zip(dims, shape)))
 
 
-def flatten(x: VariableLike,
-            dims: Optional[Union[List[str], Tuple[str]]] = None,
-            to: Optional[str] = None) -> VariableLike:
+def flatten(
+    x: VariableLike,
+    *,
+    dim: str,
+    dims: Optional[Union[List[str], Tuple[str]]] = None,
+) -> VariableLike:
     """Flatten multiple dimensions of a variable or data array into a single
     dimension. If dims is omitted, then we flatten all of the inputs dimensions
     into a single dim.
 
     :param x: Variable or DataArray to flatten.
     :param dims: A list of dim labels that will be flattened.
-    :param to: A single dim label for the resulting flattened dim.
+    :param dim: A single dim label for the resulting flattened dim.
     :raises: If the bin edge coordinates cannot be stitched back together.
     :return: Variable or DataArray with requested dimension labels and shape.
 
@@ -158,19 +162,19 @@ def flatten(x: VariableLike,
       >>> v = sc.array(dims=['x', 'y'], values=np.arange(6).reshape(2, 3))
       >>> v
       <scipp.Variable> (x: 2, y: 3)      int64  [dimensionless]  [0, 1, ..., 4, 5]
-      >>> sc.flatten(v, to='u')
+      >>> sc.flatten(v, dim='u')
       <scipp.Variable> (u: 6)      int64  [dimensionless]  [0, 1, ..., 4, 5]
-      >>> sc.flatten(v, dims=['x', 'y'], to='u')
+      >>> sc.flatten(v, dims=['x', 'y'], dim='u')
       <scipp.Variable> (u: 6)      int64  [dimensionless]  [0, 1, ..., 4, 5]
 
       >>> v = sc.array(dims=['x', 'y', 'z'], values=np.arange(24).reshape(2, 3, 4))
       >>> v
       <scipp.Variable> (x: 2, y: 3, z: 4)      int64  [dimensionless]  [0, 1, ..., 22, 23]
-      >>> sc.flatten(v, to='u')
+      >>> sc.flatten(v, dim='u')
       <scipp.Variable> (u: 24)      int64  [dimensionless]  [0, 1, ..., 22, 23]
-      >>> sc.flatten(v, dims=['x', 'y'], to='u')
+      >>> sc.flatten(v, dims=['x', 'y'], dim='u')
       <scipp.Variable> (u: 6, z: 4)      int64  [dimensionless]  [0, 1, ..., 22, 23]
-      >>> sc.flatten(v, dims=['y', 'z'], to='u')
+      >>> sc.flatten(v, dims=['y', 'z'], dim='u')
       <scipp.Variable> (x: 2, u: 12)      int64  [dimensionless]  [0, 1, ..., 22, 23]
 
       >>> a = sc.DataArray(0.1 * sc.array(dims=['x', 'y'], values=np.arange(6).reshape(2, 3)),
@@ -187,7 +191,7 @@ def flatten(x: VariableLike,
         y                           int64  [dimensionless]  (y)  [0, 1, 2]
       Data:
                                   float64  [dimensionless]  (x, y)  [0.000000, 0.100000, ..., 0.400000, 0.500000]
-      >>> sc.flatten(a, to='u')
+      >>> sc.flatten(a, dim='u')
       <scipp.DataArray>
       Dimensions: Sizes[u:6, ]
       Coordinates:
@@ -198,15 +202,9 @@ def flatten(x: VariableLike,
                                   float64  [dimensionless]  (u)  [0.000000, 0.100000, ..., 0.400000, 0.500000]
 
     """
-    if to is None:
-        # Note that this is a result of the fact that we want to support
-        # calling flatten without kwargs, and that in this case it semantically
-        # makes more sense for the dims that we want to flatten to come first
-        # in the argument list.
-        raise RuntimeError("The final flattened dimension is required.")
     if dims is None:
         dims = x.dims
-    return _call_cpp_func(_cpp.flatten, x, dims, to)
+    return _call_cpp_func(_cpp.flatten, x, dims, dim)
 
 
 def transpose(
