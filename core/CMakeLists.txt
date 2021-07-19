@@ -29,7 +29,6 @@ set(INC_FILES
     include/scipp/core/element/logical.h
     include/scipp/core/element/math.h
     include/scipp/core/element/rebin.h
-    include/scipp/core/element/reduction.h
     include/scipp/core/element/sort.h
     include/scipp/core/element/special_values.h
     include/scipp/core/element/trigonometry.h

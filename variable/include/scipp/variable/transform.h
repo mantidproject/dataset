@@ -105,11 +105,21 @@ inline constexpr auto stride_special_cases<1, true> =
 
 template <>
 inline constexpr auto stride_special_cases<2, true> =
-    std::array<std::array<scipp::index, 2>, 4>{{{1, 1}, {0, 1}, {1, 0}}};
+    std::array<std::array<scipp::index, 2>, 3>{{{1, 1}, {0, 1}, {1, 0}}};
+
+template <>
+inline constexpr auto stride_special_cases<3, true> =
+    std::array<std::array<scipp::index, 3>, 2>{{
+        {1, 1, 0}, // convolve
+        {0, 1, 1}  // convolve if kernel dims are inner dims
+    }};
 
 template <>
 inline constexpr auto stride_special_cases<2, false> =
-    std::array<std::array<scipp::index, 2>, 1>{{{1, 1}}};
+    std::array<std::array<scipp::index, 2>, 2>{{
+        {1, 1}, // transform(var)
+        {1, 0}  // transform(broadcast(var))
+    }};
 
 template <>
 inline constexpr auto stride_special_cases<3, false> =

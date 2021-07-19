@@ -44,6 +44,7 @@ set(SRC_FILES
     bin_detail.cpp
     bin_util.cpp
     comparison.cpp
+    convolution.cpp
     creation.cpp
     cumulative.cpp
     except.cpp

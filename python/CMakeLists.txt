@@ -13,6 +13,7 @@ python_add_library(
   bins.cpp
   choose.cpp
   comparison.cpp
+  convolution.cpp
   counts.cpp
   variable_creation.cpp
   cumulative.cpp

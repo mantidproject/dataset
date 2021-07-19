@@ -10,6 +10,7 @@ add_executable(
   bin_array_model_test.cpp
   bin_util_test.cpp
   comparison_test.cpp
+  convolution_test.cpp
   copy_test.cpp
   creation_test.cpp
   cumulative_test.cpp
