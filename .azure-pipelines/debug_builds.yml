@@ -1,0 +1,53 @@
+parameters:
+- name: verbose
+  displayName: Verbose
+  type: boolean
+  default: false
+
+# Note: the 'endpoint' refers to the Azure service connection, which can be
+# found on the Azure pipelines web interface under
+# scipp > scipp > Settings > Service connections
+
+resources:
+  repositories:
+  - repository: SharedPipelines
+    name: scipp/pipelines
+    type: github
+    endpoint: scipp
+    ref: main
+
+trigger:
+  branches:
+    exclude:
+      - '*'
+
+pr: none
+
+schedules:
+  - cron: "0 1 * * *"
+    displayName: 'Nightly debug builds'
+    branches:
+      include:
+        - fix-windows-debug-build # HACK, delete this and include main only
+    always: true
+
+variables:
+  scipp_debug_build: 1
+
+extends:
+  template: stages.yml@SharedPipelines
+  parameters:
+    verbose: ${{ parameters.verbose }}
+    config:
+      linux:
+        py_versions: ['3.7']
+        conda_env: 'scipp-developer.yml'
+      osx:
+        py_versions: ['3.7']
+        conda_env: 'scipp-developer-minimal.yml'
+      windows:
+        py_versions: ['3.7']
+        conda_env: 'scipp-developer-minimal.yml'
+    deploy: false
+    conda_label: 'main'
+    release: false

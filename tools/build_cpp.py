@@ -27,6 +27,10 @@ def main(prefix='install', build_dir='build', source_dir='.'):
     """
     Platform-independent function to run cmake, build, install and C++ tests.
     """
+    debug_build = "SCIPP_DEBUG_BUILD" in os.environ
+
+    print("Building in {} configuration".format(
+        "debug" if debug_build else "release"))
 
     # Get the platform name: 'linux', 'darwin' (osx), or 'win32'.
     platform = sys.platform
@@ -50,8 +54,12 @@ def main(prefix='install', build_dir='build', source_dir='.'):
         '-DPYTHON_EXECUTABLE': shutil.which("python"),
         '-DCMAKE_INSTALL_PREFIX': prefix,
         '-DWITH_CTEST': 'OFF',
-        '-DCMAKE_INTERPROCEDURAL_OPTIMIZATION': 'ON'
+        '-DCMAKE_INTERPROCEDURAL_OPTIMIZATION': 'OFF' if debug_build else "ON",
+        '-DCMAKE_BUILD_TYPE': 'Debug' if debug_build else "Release",
     }
+
+    if debug_build:
+        cmake_flags["-DDYNAMIC_LIB"] = "ON"
 
     if platform == 'darwin':
         cmake_flags.update({'-DCMAKE_INTERPROCEDURAL_OPTIMIZATION': 'OFF'})
@@ -70,7 +78,12 @@ def main(prefix='install', build_dir='build', source_dir='.'):
     if platform == 'win32':
         cmake_flags.update({'-G': 'Visual Studio 16 2019', '-A': 'x64'})
         shell = True
-        build_config = 'Release'
+        if debug_build:
+            build_config = 'Debug'
+            # TBB not available for windows-debug
+            cmake_flags['-DDISABLE_MULTI_THREADING'] = "ON"
+        else:
+            build_config = 'Release'
 
     # Additional flags for --build commands
     build_flags = [parallel_flag]

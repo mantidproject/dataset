@@ -230,9 +230,12 @@ template <class T> T GroupBy<T>::mean(const Dim reductionDim) const {
 namespace {
 template <class T> struct NanSensitiveLess {
   // Compare two values such that x < NaN for all x != NaN.
+  // Note: if changing this in future, ensure it meets the requirements from
+  // https://en.cppreference.com/w/cpp/named_req/Compare, as it is used as
+  // the comparator for keys in a map.
   bool operator()(const T &a, const T &b) const {
     if (scipp::numeric::isnan(b)) {
-      return true;
+      return !scipp::numeric::isnan(a);
     }
     return a < b;
   }
