@@ -134,11 +134,6 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 include(IPO)
 
-# Optimization flags
-if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --param inline-unit-growth=50")
-endif()
-
 # Get version from git-describe
 execute_process(
   COMMAND git describe --tag
