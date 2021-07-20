@@ -212,14 +212,6 @@ Dict<Key, Value> &Dict<Key, Value>::setSlice(const Slice s, const Dict &dict) {
 template <class Key, class Value>
 void Dict<Key, Value>::rename(const Dim from, const Dim to) {
   m_sizes.replace_key(from, to);
-  // TODO relabel only if coords (not attrs?)?
-  if constexpr (std::is_same_v<Key, Dim>) {
-    if (m_items.count(from)) {
-      auto node = m_items.extract(from);
-      node.key() = to;
-      m_items.insert(std::move(node));
-    }
-  }
   for (auto &item : m_items)
     if (item.second.dims().contains(from))
       item.second.rename(from, to);

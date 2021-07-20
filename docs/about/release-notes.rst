@@ -14,6 +14,7 @@ Features
 * Added bound method equivalents to many free functions which take a single Variable or DataArray `#1969 <https://github.com/scipp/scipp/pull/1969>`_.
 * Variables can now be constructed directly from multi dimensional lists and tuples `#1977 <https://github.com/scipp/scipp/pull/1977>`_.
 * Plotting 1-D event data is now supported `#2018 <https://github.com/scipp/scipp/pull/2018>`_.
+* Add ``transform_coords`` for (multi-step) transformations based on existing coords, with support of event coords `#2058 <https://github.com/scipp/scipp/pull/2058>`_.
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
@@ -28,6 +29,8 @@ Breaking changes
 * Made most arguments of ``DataArray`` and ``Dataset`` constructors keyword-only `#2008 <https://github.com/scipp/scipp/pull/2008>`_.
 * Made arguments of many functions keyword-only, e.g. constructors of ``DataArray`` and ``Dataset``, ``bin``, and ``atan2`` `#1983 <https://github.com/scipp/scipp/pull/1983>`_, `#2008 <https://github.com/scipp/scipp/pull/2008>`_, `#2012 <https://github.com/scipp/scipp/pull/2012>`_.
 * ``astype`` and ``to_unit`` now copy the input by default even when no transformation is required, use the new ``copy`` argument to avoid `#2016 <https://github.com/scipp/scipp/pull/2016>`_.
+* ``rename_dims`` does not rename dimension-coords any more, only dims will be renamed `#2058 <https://github.com/scipp/scipp/pull/2058>`_.
+* ``rename_dims`` does not modify the input anymore but returns a new object with renamed dims `#2058 <https://github.com/scipp/scipp/pull/2058>`_.
 
 Bugfixes
 ~~~~~~~~

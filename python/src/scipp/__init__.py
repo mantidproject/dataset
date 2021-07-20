@@ -130,6 +130,8 @@ del _cls
 
 from . import _binding
 
+from .coords import transform_coords, show_graph
+
 _binding.bind_get()
 for _cls in (Variable, DataArray):
     _binding.bind_functions_as_methods(
@@ -138,6 +140,8 @@ for _cls in (Variable, DataArray):
 del _cls
 _binding.bind_functions_as_methods(
     Variable, globals(), ('cumsum', 'max', 'min', 'nanmax', 'nanmin'))
-_binding.bind_functions_as_methods(DataArray, globals(), ('groupby', ))
-_binding.bind_functions_as_methods(Dataset, globals(), ('groupby', ))
+for _cls in (DataArray, Dataset):
+    _binding.bind_functions_as_methods(_cls, globals(),
+                                       ('groupby', 'transform_coords'))
+del _cls
 del _binding

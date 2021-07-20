@@ -651,9 +651,10 @@ def test_construct_0d_dtype():
 def test_rename_dims():
     values = np.arange(6).reshape(2, 3)
     xy = sc.Variable(dims=['x', 'y'], values=values)
+    original = xy.copy()
     zy = sc.Variable(dims=['z', 'y'], values=values)
-    xy.rename_dims({'x': 'z'})
-    assert sc.identical(xy, zy)
+    assert sc.identical(xy.rename_dims({'x': 'z'}), zy)
+    assert sc.identical(xy, original)
 
 
 def test_bool_variable_repr():

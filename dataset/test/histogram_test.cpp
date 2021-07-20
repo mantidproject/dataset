@@ -193,6 +193,7 @@ TEST(HistogramTest, dense) {
                      makeVariable<double>(Dims{Dim::Y}, Shape{5},
                                           Values{1.5, 2.5, 3.5, 4.5, 5.5}));
   expected.rename(Dim::Y, Dim::Z);
+  expected.coords().set(Dim::Z, expected.coords().extract(Dim::Y));
   EXPECT_EQ(dataset::histogram(dense, edgesZ), expected);
 }
 

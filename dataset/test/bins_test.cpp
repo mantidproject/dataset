@@ -329,6 +329,7 @@ TEST_F(DataArrayBinsScaleTest,
   auto x = make_histogram();
   auto z(x);
   z.rename(Dim::X, Dim::Z);
+  z.coords().set(Dim::Z, z.coords().extract(Dim::X));
   auto zx = z * x;
   auto events = make_events();
   events.coords().set(Dim::Z, events.coords()[Dim::X]);

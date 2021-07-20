@@ -524,5 +524,6 @@ TEST_F(DatasetRenameTest, rename) {
   d.rename(Dim::X, Dim::Row);
   DatasetFactory3D factory(4, 5, 6, Dim::Row);
   factory.seed(0);
+  d.coords().set(Dim::Row, d.coords().extract(Dim::X));
   EXPECT_EQ(d, factory.make());
 }

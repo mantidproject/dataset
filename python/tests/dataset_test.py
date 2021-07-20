@@ -670,10 +670,17 @@ def test_sort():
 
 def test_rename_dims():
     d = make_simple_dataset('x', 'y', seed=0)
-    d.rename_dims({'y': 'z'})
-    assert sc.identical(d, make_simple_dataset('x', 'z', seed=0))
-    d.rename_dims(dims_dict={'x': 'y', 'z': 'x'})
-    assert sc.identical(d, make_simple_dataset('y', 'x', seed=0))
+    original = d.copy()
+    renamed = d.rename_dims({'y': 'z'})
+    assert sc.identical(d, original)
+    renamed.coords['z'] = renamed.coords['y']
+    del renamed.coords['y']
+    assert sc.identical(renamed, make_simple_dataset('x', 'z', seed=0))
+    renamed = renamed.rename_dims(dims_dict={'x': 'y', 'z': 'x'})
+    renamed.coords['y'] = renamed.coords['x']
+    renamed.coords['x'] = renamed.coords['z']
+    del renamed.coords['z']
+    assert sc.identical(renamed, make_simple_dataset('y', 'x', seed=0))
 
 
 def test_coord_delitem():
