@@ -8,7 +8,7 @@ source:
 
 requirements:
   build:
-    - cmake
+    - cmake >=3.21
     - gxx_linux-64 9.3.* [linux64]
     - git
     - ninja

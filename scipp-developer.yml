@@ -12,6 +12,7 @@ dependencies:
   - ninja
   - tbb-devel
   - conan
+  - cmake >=3.21
 
   # Run
   - appdirs

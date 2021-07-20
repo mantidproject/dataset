@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2021 Scipp contributors (https://github.com/scipp)
 # ~~~
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 execute_process(
   COMMAND git describe --tags --abbrev=0
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
