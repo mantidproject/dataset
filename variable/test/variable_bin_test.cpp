@@ -145,6 +145,32 @@ TEST_F(VariableBinsTest, binary_operation_with_dense_broadcast) {
   EXPECT_EQ(dense + var, transpose(expected));
 }
 
+TEST_F(VariableBinsTest, binary_operation_with_dense_2d_bins) {
+  auto indices_2d = makeVariable<scipp::index_pair>(
+      Dims{Dim::X}, Shape{3},
+      Values{std::pair{0, 1}, std::pair{1, 1}, std::pair{1, 4}});
+  auto dense = makeVariable<double>(Dims{Dim::X}, Shape{3}, Values{2, 3, 4});
+
+  // Bin in outer dim.
+  auto buffer_2d = makeVariable<double>(Dims{Dim::Event, Dim::Y}, Shape{4, 2},
+                                        Values{0, 1, 2, 3, 4, 5, 6, 7});
+  auto binned = make_bins(indices_2d, Dim::Event, buffer_2d);
+  EXPECT_EQ(
+      binned * dense,
+      make_bins(indices_2d, Dim::Event,
+                makeVariable<double>(Dims{Dim::Event, Dim::Y}, Shape{4, 2},
+                                     Values{0, 2, 8, 12, 16, 20, 24, 28})));
+
+  // Bin in inner dim.
+  buffer_2d = makeVariable<double>(Dims{Dim::Y, Dim::Event}, Shape{2, 4},
+                                   Values{0, 1, 2, 3, 4, 5, 6, 7});
+  binned = make_bins(indices_2d, Dim::Event, buffer_2d);
+  EXPECT_EQ(binned * dense, make_bins(indices_2d, Dim::Event,
+                                      makeVariable<double>(
+                                          Dims{Dim::Y, Dim::Event}, Shape{2, 4},
+                                          Values{0, 4, 8, 12, 8, 20, 24, 28})));
+}
+
 TEST_F(VariableBinsTest, binary_operation_strided) {
   Variable big_buffer = makeVariable<double>(Dimensions{Dim::X, 8},
                                              Values{1, 2, 3, 4, 5, 6, 7, 8});

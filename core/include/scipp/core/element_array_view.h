@@ -68,15 +68,6 @@ public:
   ElementArrayViewParams(const ElementArrayViewParams &other,
                          const Dimensions &iterDims);
 
-  [[nodiscard]] ViewIndex begin_index() const noexcept {
-    return {m_iterDims, m_strides};
-  }
-  [[nodiscard]] ViewIndex end_index() const noexcept {
-    ViewIndex i{m_iterDims, m_strides};
-    i.set_to_end();
-    return i;
-  }
-
   [[nodiscard]] scipp::index size() const { return m_iterDims.volume(); }
   [[nodiscard]] constexpr scipp::index offset() const noexcept {
     return m_offset;

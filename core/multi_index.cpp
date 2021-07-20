@@ -5,7 +5,7 @@
 #include "scipp/core/multi_index.h"
 #include "scipp/core/except.h"
 
-namespace scipp::core {
+namespace scipp::core::detail {
 
 void validate_bin_indices_impl(const ElementArrayViewParams &param0,
                                const ElementArrayViewParams &param1) {
@@ -28,4 +28,4 @@ void validate_bin_indices_impl(const ElementArrayViewParams &param0,
   }
 }
 
-} // namespace scipp::core
+} // namespace scipp::core::detail

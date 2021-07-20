@@ -145,7 +145,7 @@ void increment(std::array<scipp::index, sizeof...(Strides)> &indices) noexcept {
 
 template <size_t N>
 void increment(std::array<scipp::index, N> &indices,
-               const std::array<scipp::index, N> &strides) noexcept {
+               const scipp::span<const scipp::index> strides) noexcept {
   for (size_t i = 0; i < N; ++i) {
     indices[i] += strides[i];
   }
@@ -216,10 +216,10 @@ static void inner_loop(Op &&op,
 
 /// Run transform with strides known at run time but bypassing MultiIndex.
 template <bool in_place, class Op, class... Operands>
-static void
-inner_loop(Op &&op, std::array<scipp::index, sizeof...(Operands)> indices,
-           const std::array<scipp::index, sizeof...(Operands)> &strides,
-           const scipp::index n, Operands &&... operands) {
+static void inner_loop(Op &&op,
+                       std::array<scipp::index, sizeof...(Operands)> indices,
+                       const scipp::span<const scipp::index> strides,
+                       const scipp::index n, Operands &&... operands) {
   for (scipp::index i = 0; i < n; ++i) {
     if constexpr (in_place) {
       detail::call_in_place(op, indices, std::forward<Operands>(operands)...);
@@ -233,16 +233,17 @@ inner_loop(Op &&op, std::array<scipp::index, sizeof...(Operands)> indices,
 template <bool in_place, size_t I = 0, class Op, class... Operands>
 static void dispatch_inner_loop(
     Op &&op, const std::array<scipp::index, sizeof...(Operands)> &indices,
-    const std::array<scipp::index, sizeof...(Operands)> &inner_strides,
-    const scipp::index n, Operands &&... operands) {
+    const scipp::span<const scipp::index> inner_strides, const scipp::index n,
+    Operands &&... operands) {
   constexpr auto N_Operands = sizeof...(Operands);
   if constexpr (I ==
                 detail::stride_special_cases<N_Operands, in_place>.size()) {
     inner_loop<in_place>(std::forward<Op>(op), indices, inner_strides, n,
                          std::forward<Operands>(operands)...);
   } else {
-    if (inner_strides ==
-        detail::stride_special_cases<N_Operands, in_place>[I]) {
+    if (std::equal(
+            inner_strides.begin(), inner_strides.end(),
+            detail::stride_special_cases<N_Operands, in_place>[I].begin())) {
       inner_loop<in_place>(
           std::forward<Op>(op), indices,
           detail::make_stride_sequence<I, N_Operands, in_place>{}, n,
@@ -269,7 +270,7 @@ static void transform_elements(Op op, Out &&out, Ts &&... other) {
       dispatch_inner_loop<false>(op, indices.get(), inner_strides, inner_size,
                                  std::forward<Out>(out),
                                  std::forward<Ts>(other)...);
-      indices.increment_inner_by(inner_size);
+      indices.increment_inner_by(inner_size != 0 ? inner_size : 1);
       indices.increment_outer();
     }
   };
@@ -376,7 +377,7 @@ static void do_transform(Op op, Out &&out, Tuple &&processed, const Arg &arg,
 
 template <class T> struct as_view {
   using value_type = typename T::value_type;
-  bool hasVariances() const { return data.hasVariances(); }
+  [[nodiscard]] bool hasVariances() const { return data.hasVariances(); }
   auto values() const { return decltype(data.values())(data.values(), dims); }
   auto variances() const {
     return decltype(data.variances())(data.variances(), dims);
@@ -472,20 +473,20 @@ template <bool dry_run> struct in_place {
         detail::dispatch_inner_loop<true>(op, indices.get(), inner_strides,
                                           inner_size, std::forward<T>(arg),
                                           std::forward<Ts>(other)...);
-        indices.increment_inner_by(inner_size);
+        indices.increment_inner_by(inner_size != 0 ? inner_size : 1);
         indices.increment_outer();
       }
     };
     if (begin.has_stride_zero()) {
       // The output has a dimension with stride zero so parallelization must
       // be done differently. See parallelization in accumulate.h.
-      auto indices = begin; // copy so that run doesn't modify begin
-      auto end = begin;
+      auto indices = begin;
+      auto end = std::move(begin);
       end.set_index(arg.size());
       run(indices, end);
     } else {
       auto run_parallel = [&](const auto &range) {
-        auto indices = begin;
+        auto indices = begin; // copy so that run doesn't modify begin
         indices.set_index(range.begin());
         auto end = begin;
         end.set_index(range.end());

@@ -2,6 +2,7 @@
 
 #include <array>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 // Use namespace std to make the operators discoverable through ADL.

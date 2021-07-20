@@ -66,10 +66,11 @@ TEST(IndexCompositionTest, flat_index_from_strides_3d) {
 
 TEST(IndexCompositionTest, extract_indices_0d) {
   const std::array<scipp::index, 3> shape{-1, -2, -3};
-  const std::array<scipp::index, 3> ref{-1, -2, -3};
-  auto indices = ref;
-  scipp::extract_indices(0, 0, shape, indices);
-  EXPECT_EQ(indices, ref);
+  std::array<scipp::index, 3> indices{-1, -2, -3};
+  scipp::extract_indices(0, shape.begin(), shape.begin() + 0, indices.begin());
+  EXPECT_EQ(indices[0], 0);
+  scipp::extract_indices(1, shape.begin(), shape.begin() + 0, indices.begin());
+  EXPECT_EQ(indices[0], 1);
 }
 
 TEST(IndexCompositionTest, extract_indices_1d) {
@@ -77,7 +78,8 @@ TEST(IndexCompositionTest, extract_indices_1d) {
     for (scipp::index total_index = 0; total_index < size; ++total_index) {
       const std::array<scipp::index, 3> shape{size, -2, -3};
       std::array<scipp::index, 3> indices{-1, -2, -3};
-      scipp::extract_indices(total_index, 1, shape, indices);
+      scipp::extract_indices(total_index, shape.begin(), shape.begin() + 1,
+                             indices.begin());
       EXPECT_EQ(indices[0], total_index);
     }
   }
@@ -86,9 +88,9 @@ TEST(IndexCompositionTest, extract_indices_1d) {
 TEST(IndexCompositionTest, extract_indices_1d_size0) {
   const std::array<scipp::index, 3> shape{0, -2, -3};
   std::array<scipp::index, 3> indices{-1, -2, -3};
-  scipp::extract_indices(0, 1, shape, indices);
+  scipp::extract_indices(0, shape.begin(), shape.begin() + 1, indices.begin());
   EXPECT_EQ(indices[0], 0);
-  scipp::extract_indices(1, 1, shape, indices);
+  scipp::extract_indices(1, shape.begin(), shape.begin() + 1, indices.begin());
   EXPECT_EQ(indices[0], 1);
 }
 
@@ -96,7 +98,8 @@ TEST(IndexCompositionTest, extract_indices_2d) {
   const std::array<scipp::index, 3> shape{2, 3, -1};
   for (scipp::index i = 0; i < shape[0] * shape[1]; ++i) {
     std::array<scipp::index, 3> indices{-1, -2, -3};
-    scipp::extract_indices(i, 2, shape, indices);
+    scipp::extract_indices(i, shape.begin(), shape.begin() + 2,
+                           indices.begin());
     EXPECT_EQ(indices[0] + shape[0] * indices[1], i);
   }
 }
@@ -105,33 +108,34 @@ TEST(IndexCompositionTest, extract_indices_2d_end) {
   const std::array<scipp::index, 3> shape{2, 3, -1};
   std::array<scipp::index, 3> indices{-1, -2, -3};
   const std::array<scipp::index, 3> expected{0, 3, -3};
-  scipp::extract_indices(2 * 3, 2, shape, indices);
+  scipp::extract_indices(2 * 3, shape.begin(), shape.begin() + 2,
+                         indices.begin());
   EXPECT_EQ(indices, expected);
 }
 
 TEST(IndexCompositionTest, extract_indices_2d_size0) {
   std::array<scipp::index, 3> shape{0, 1, -3};
   std::array<scipp::index, 3> indices{-1, -2, -3};
-  scipp::extract_indices(0, 2, shape, indices);
+  scipp::extract_indices(0, shape.begin(), shape.begin() + 2, indices.begin());
   EXPECT_EQ(indices[0], 0);
   EXPECT_EQ(indices[1], 0);
-  scipp::extract_indices(1, 2, shape, indices);
+  scipp::extract_indices(1, shape.begin(), shape.begin() + 2, indices.begin());
   EXPECT_EQ(indices[0], 0);
   EXPECT_EQ(indices[1], 1);
 
   shape = {2, 0, -3};
-  scipp::extract_indices(0, 2, shape, indices);
+  scipp::extract_indices(0, shape.begin(), shape.begin() + 2, indices.begin());
   EXPECT_EQ(indices[0], 0);
   EXPECT_EQ(indices[1], 0);
-  scipp::extract_indices(1, 2, shape, indices);
+  scipp::extract_indices(1, shape.begin(), shape.begin() + 2, indices.begin());
   EXPECT_EQ(indices[0], 1);
   EXPECT_EQ(indices[1], 0);
 
   shape = {0, 0, -3};
-  scipp::extract_indices(0, 2, shape, indices);
+  scipp::extract_indices(0, shape.begin(), shape.begin() + 2, indices.begin());
   EXPECT_EQ(indices[0], 0);
   EXPECT_EQ(indices[1], 0);
-  scipp::extract_indices(1, 2, shape, indices);
+  scipp::extract_indices(1, shape.begin(), shape.begin() + 2, indices.begin());
   EXPECT_EQ(indices[0], 0);
   EXPECT_EQ(indices[1], 1);
 }
@@ -140,7 +144,8 @@ TEST(IndexCompositionTest, extract_indices_3d) {
   const std::array<scipp::index, 3> shape{4, 5, 2};
   for (scipp::index i = 0; i < shape[0] * shape[1] * shape[2]; ++i) {
     std::array<scipp::index, 3> indices{-1, -2, -3};
-    scipp::extract_indices(i, 3, shape, indices);
+    scipp::extract_indices(i, shape.begin(), shape.begin() + 3,
+                           indices.begin());
     EXPECT_EQ(indices[0] + shape[0] * (indices[1] + shape[1] * indices[2]), i);
   }
 }
@@ -149,6 +154,7 @@ TEST(IndexCompositionTest, extract_indices_3d_end) {
   const std::array<scipp::index, 3> shape{2, 3, 5};
   std::array<scipp::index, 3> indices{-1, -2, -3};
   const std::array<scipp::index, 3> expected{0, 0, 5};
-  scipp::extract_indices(2 * 3 * 5, 3, shape, indices);
+  scipp::extract_indices(2 * 3 * 5, shape.begin(), shape.begin() + 3,
+                         indices.begin());
   EXPECT_EQ(indices, expected);
 }

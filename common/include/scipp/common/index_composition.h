@@ -72,7 +72,8 @@ constexpr auto memory_bounds(ForwardIt1 shape_it, const ForwardIt1 shape_end,
 /// This allows setting 'end-iterators' in a well defined manner.
 /// However, the result is undefined for greater values of I.
 ///
-/// Values of array elements in `indices` with d > ndim-1 are unspecified.
+/// Values of array elements in `indices` with d > ndim-1 are unspecified
+/// except when ndim == 0, i_0 = I.
 ///
 /// Any number of l_d maybe 0 which yields i_d = 0.
 /// Except for the one-past-the-end case described above, i_{ndim-1} = 1 if
@@ -80,31 +81,33 @@ constexpr auto memory_bounds(ForwardIt1 shape_it, const ForwardIt1 shape_end,
 /// to the end.
 ///
 /// @param flat_index I
-/// @param ndim n
-/// @param shape {l_d}
-/// @param indices {i_d}
+/// @param shape_it Begin iterator for {l_d}.
+/// @param shape_end End iterator for {l_d}.
+/// @param indices_it Begin iterator for {i_d}.
+///                   `*indices_it` must always be writeable, even when
+///                   `shape_it == shape_end`.
 /// @note This function uses a *shape*, i.e. individual dimension sizes
 ///       to encode the size of the array.
 ///       Therefore, some conversion of parameters is required when inverting
 ///       the result with `flat_index_from_strides`.
-template <size_t Ndim_max>
-constexpr void
-extract_indices(scipp::index flat_index, const scipp::index ndim,
-                const std::array<scipp::index, Ndim_max> &shape,
-                std::array<scipp::index, Ndim_max> &indices) noexcept {
-  assert(ndim <= static_cast<scipp::index>(Ndim_max));
-  for (scipp::index dim = 0; dim < ndim - 1; ++dim) {
-    if (shape[dim] != 0) {
-      const scipp::index aux = flat_index / shape[dim];
-      indices[dim] = flat_index - aux * shape[dim];
+template <class It1, class It2>
+constexpr void extract_indices(scipp::index flat_index, It1 shape_it,
+                               It1 shape_end, It2 indices_it) noexcept {
+  if (shape_it == shape_end) {
+    *indices_it = flat_index;
+    return;
+  }
+  shape_end--; // The last element is set after the loop.
+  for (; shape_it != shape_end; ++shape_it, ++indices_it) {
+    if (*shape_it != 0) {
+      const scipp::index aux = flat_index / *shape_it;
+      *indices_it = flat_index - aux * *shape_it;
       flat_index = aux;
     } else {
-      indices[dim] = 0;
+      *indices_it = 0;
     }
   }
-  if (ndim > 0) {
-    indices[ndim - 1] = flat_index;
-  }
+  *indices_it = flat_index;
 }
 /* Implementation notes for extract_indices
  *

@@ -132,6 +132,9 @@ def plot(data, xname, yname, ignored, xscale='log'):
     fig = plt.figure()
     fig.suptitle(data.name.unique()[0])
     nx = min(3, n_subplots)
+    if nx == 0:
+        plt.close(fig)
+        return
     ny = math.ceil(n_subplots / nx)
     for igroup, group in enumerate(groups):
         ax = fig.add_subplot(nx, ny, igroup + 1)
@@ -157,6 +160,7 @@ def plot(data, xname, yname, ignored, xscale='log'):
                     marker='_',
                     ls='',
                     c=f'C{iline}')
+        ax.set_ylim((0, ax.get_ylim()[1]))
 
         if igroup == 0:
             ax.legend()
